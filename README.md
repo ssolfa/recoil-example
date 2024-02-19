@@ -1,70 +1,91 @@
-# Getting Started with Create React App
+## 📁 Recoil 사용 예제
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Recoil을 사용하여 간단한 할 일 목록 애플리케이션을 만들어 보았다. \
+자세한 과정 ⬇️ \
+https://5ffthewall.tistory.com/73
 
-## Available Scripts
+### `atom.jsx`
+- 할 일 목록을 담을 `atom` 파일
+```javascript
+import { atom } from 'recoil';
 
-In the project directory, you can run:
+export const todoListState = atom({
+  key: 'todoListState', 
+  default: [],
+});
+```
 
-### `npm start`
+### `selector.jsx`
+- 완료된 할 일 수를 계산하는 `selector` 파일
+```javascript
+import { selector } from 'recoil';
+import { todoListState } from '/Users/solmee/Desktop/react/recoil-example/src/atom.jsx';
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+export const completedTodoCountState = selector({
+  key: 'completedTodoCountState',
+  get: ({ get }) => {
+    const todoList = get(todoListState);
+    return todoList.filter((todo) => todo.completed).length;
+  },
+});
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### `counter.jsx`
+- `useRecoilState()`를 사용하여 구독해서 값을 업데이트함
+- `useRecoilValue()`를 사용해 selector 값을 읽어옴
+```javascript
+import React from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { todoListState } from './atom';
+import { completedTodoCountState } from './selector';
 
-### `npm test`
+export default function Counter(){
+    const [todoList, setTodoList] = useRecoilState(todoListState);
+    const completedTodoCount = useRecoilValue(completedTodoCountState);
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    const addItem = () => {
+        setTodoList([...todoList, { text: `할 일 ${todoList.length + 1}`, completed: false }]);
+      };
+    
+      const toggleItemCompletion = (index) => {
+        const newList = [...todoList];
+        newList[index] = { ...newList[index], completed: !newList[index].completed };
+        setTodoList(newList);
+      };
 
-### `npm run build`
+      return(
+        <div>
+      <h1>할 일 목록</h1>
+      <button onClick={addItem}>할 일 추가</button>
+      <p>완료된 할 일 수: {completedTodoCount}</p>
+      <ul>
+        {todoList.map((todo, index) => (
+          <li key={index} onClick={() => toggleItemCompletion(index)} style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
+            {todo.text}
+          </li>
+        ))}
+      </ul>
+    </div>
+      );
+}
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### `totalCounter.jsx`
+- `useRecoilValue()`로 selector의 값을 읽어옴
+```javascript
+import React from 'react';
+import { useRecoilValue } from 'recoil';
+import { completedTodoCountState } from './selector';
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+export default function TotalCount() {
+  const completedTodoCount = useRecoilValue(completedTodoCountState);
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  return (
+    <div>
+        <p>totalCounter 컴포넌트</p>
+      <p>완료된 할 일 총 수: {completedTodoCount}</p>
+    </div>
+  );
+}
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
